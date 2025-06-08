@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="406.0" prefWidth="787.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ChordManagerController">
+    <children>
+        <Pane layoutX="280.0" layoutY="1.0" prefHeight="405.0" prefWidth="240.0">
+            <children>
+                <Label layoutX="20.0" layoutY="100.0" text="Akkord típusa">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <Label layoutX="20.0" layoutY="180.0" text="Akkord basszushangja">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <Label layoutX="20.0" layoutY="260.0" text="Akkord lefogása">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <TextField fx:id="rootTextField" alignment="CENTER" layoutX="20.0" layoutY="50.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="200.0" promptText="Alaphang" style="-fx-padding: 0 10;">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </TextField>
+                <Label layoutX="20.0" layoutY="20.0" text="Akkord alaphangja">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <Button fx:id="actionButton" contentDisplay="CENTER" layoutX="45.0" layoutY="350.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" text="Keresés" textAlignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+                <TextField fx:id="fingeringTextField" alignment="CENTER" layoutX="20.0" layoutY="290.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="200.0" promptText="------" style="-fx-padding: 0 10;">
+                    <font>
+                        <Font name="Monospaced Bold" size="18.0" />
+                    </font>
+                </TextField>
+                <TextField fx:id="bassTextField" alignment="CENTER" layoutX="20.0" layoutY="210.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="200.0" promptText="Basszus" style="-fx-padding: 0 10;">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </TextField>
+                <TextField fx:id="typeTextField" alignment="CENTER" layoutX="20.0" layoutY="130.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="200.0" promptText="Típus" style="-fx-padding: 0 10;">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </TextField>
+            </children>
+        </Pane>
+        <Pane layoutY="88.0" prefHeight="230.0" prefWidth="280.0">
+            <children>
+
+                <!-- Gombok bal oldalon -->
+                <Button fx:id="searchButton" layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="240.0" text="Akkord keresése">
+                    <font>
+                        <Font name="Century Gothic" size="20.0" />
+                    </font>
+                </Button>
+
+                <Button fx:id="createButton" layoutX="20.0" layoutY="90.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="240.0" text="Akkord létrehozása">
+                    <font>
+                        <Font name="Century Gothic" size="20.0" />
+                    </font>
+                </Button>
+                <Button fx:id="exitButton" layoutX="20.0" layoutY="160.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="240.0" text="Bezárás">
+                    <font>
+                        <Font name="Century Gothic" size="20.0" />
+                    </font>
+                </Button>
+            </children>
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+        </Pane>
+        <Pane layoutX="520.0" layoutY="1.0" prefHeight="405.0" prefWidth="290.0">
+            <children>
+                <TableView fx:id="chordlistTableView" prefHeight="370.0" prefWidth="250.0">
+
+                <columns>
+                    <TableColumn fx:id="idTableColumn" text="ID" />
+                    <TableColumn fx:id="chordTableColumn" text="Akkord" />
+                    <TableColumn fx:id="fingeringTableColumn" text="Lefogás" />
+                </columns>
+                </TableView>
+            </children>
+        </Pane>
+    </children>
+    <padding>
+        <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+    </padding>
+</AnchorPane>
