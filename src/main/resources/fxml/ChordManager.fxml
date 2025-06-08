@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.text.Font?>
+        <?import javafx.geometry.Insets?>
+        <?import javafx.scene.control.Button?>
+        <?import javafx.scene.control.Label?>
+        <?import javafx.scene.control.TableColumn?>
+        <?import javafx.scene.control.TableView?>
+        <?import javafx.scene.control.TextField?>
+        <?import javafx.scene.layout.AnchorPane?>
+        <?import javafx.scene.layout.Pane?>
+        <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="406.0" prefWidth="787.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ChordManagerController">
     <children>
@@ -24,7 +24,7 @@
                         <Font size="18.0" />
                     </font>
                 </Label>
-                <Label layoutX="20.0" layoutY="260.0" text="Akkord lefogása">
+                <Label fx:id="fingeringLabel" layoutX="20.0" layoutY="260.0" text="Akkord lefogása">
                     <font>
                         <Font size="18.0" />
                     </font>
@@ -88,13 +88,12 @@
         </Pane>
         <Pane layoutX="520.0" layoutY="1.0" prefHeight="405.0" prefWidth="290.0">
             <children>
-                <TableView fx:id="chordlistTableView" prefHeight="370.0" prefWidth="250.0">
-
-                <columns>
-                    <TableColumn fx:id="idTableColumn" text="ID" />
-                    <TableColumn fx:id="chordTableColumn" text="Akkord" />
-                    <TableColumn fx:id="fingeringTableColumn" text="Lefogás" />
-                </columns>
+                <TableView fx:id="chordlistTableView" layoutX="20.0" layoutY="20.0" prefHeight="370.0" prefWidth="250.0">
+                    <columns>
+                        <TableColumn fx:id="idTableColumn" minWidth="50.0" prefWidth="50.0" text="ID" />
+                        <TableColumn fx:id="chordTableColumn" prefWidth="100.0" text="Akkord" />
+                        <TableColumn fx:id="fingeringTableColumn" prefWidth="100.0" text="Lefogás" />
+                    </columns>
                 </TableView>
             </children>
         </Pane>
