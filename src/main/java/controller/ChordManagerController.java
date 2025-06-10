@@ -48,7 +48,6 @@ public class ChordManagerController {
     @FXML
     private TableColumn<GuitarChord, String> fingeringTableColumn;
 
-    @Getter
     private String mode = "search";
     private List<GuitarChord> allChords = new ArrayList<>();
     private List<GuitarChord> filteredChords = new ArrayList<>();
@@ -148,16 +147,20 @@ public class ChordManagerController {
     }
 
     private void createChords() {
-        String root = rootTextField.getText().trim().toUpperCase();
-        String type = typeTextField.getText().trim();
-        String modifier = modifierTextField.getText().trim();
-        String bass = bassTextField.getText().trim().toUpperCase();
+        String root = firstLetterUpperCase(rootTextField.getText().trim());;
+        String type = typeTextField.getText().trim().toLowerCase();
+        String modifier = modifierTextField.getText().trim().toLowerCase();
+        String bass = firstLetterUpperCase(bassTextField.getText().trim());
         String fingeringInput = fingeringTextField.getText().trim().toUpperCase();
 
         String[] fingers = fingeringInput.split("\\s+");
         if (fingers.length != 6) {
             showAlert("Beviteli hiba", "A 6 húr helyett " + fingers.length + " húrt adtál meg.");
             return;
+        }
+
+        for (int i = 0; i < fingers.length; i++) {
+            fingers[i] = firstLetterUpperCase(fingers[i]);
         }
 
         Fingering fingering = new Fingering();
@@ -214,6 +217,10 @@ public class ChordManagerController {
         mode = "search";
         fingeringLabel.setVisible(false);
         fingeringTextField.setVisible(false);
+        rootTextField.setText("");
+        typeTextField.setText("");
+        modifierTextField.setText("");
+        bassTextField.setText("");
         actionButton.setText("Keresés");
         Platform.runLater(() -> rootTextField.requestFocus());
     }
@@ -223,6 +230,7 @@ public class ChordManagerController {
         mode = "create";
         fingeringLabel.setVisible(true);
         fingeringTextField.setVisible(true);
+        fingeringTextField.setText("");
         actionButton.setText("Mentés");
         Platform.runLater(() -> rootTextField.requestFocus());
     }
@@ -230,5 +238,15 @@ public class ChordManagerController {
     @FXML
     private void exit(ActionEvent event) {
         Platform.exit();
+    }
+
+    public String firstLetterUpperCase(String string) {
+        if (string.equals("")) {
+            return string;
+        } else if (string.length() == 1) {
+            return string.toUpperCase();
+        } else {
+            return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+        }
     }
 }
