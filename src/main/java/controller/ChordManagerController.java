@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import lombok.Getter;
+import lombok.NonNull;
 import model.Fingering;
 import model.GuitarChord;
 
@@ -47,6 +49,8 @@ public class ChordManagerController {
     private TableColumn<GuitarChord, String> chordTableColumn;
     @FXML
     private TableColumn<GuitarChord, String> fingeringTableColumn;
+    @FXML
+    private TableColumn<GuitarChord, String> capoTableColumn;
 
     private String mode = "search";
     private List<GuitarChord> allChords = new ArrayList<>();
@@ -56,9 +60,9 @@ public class ChordManagerController {
     @FXML
     private void initialize() {
         idTableColumn.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(String.valueOf(chordlistTableView.getItems().indexOf(cellData.getValue()) + 1)));
+                new SimpleStringProperty(String.valueOf(chordlistTableView.getItems().indexOf(cellData.getValue()) + 1)));
         chordTableColumn.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(
+                new SimpleStringProperty(
                             cellData.getValue().getRoot() +
                                 cellData.getValue().getType() +
                                 (cellData.getValue().getModifier() != null ? cellData.getValue().getModifier() : "") +
@@ -66,8 +70,14 @@ public class ChordManagerController {
                 ));
         fingeringTableColumn.setCellValueFactory(cellData -> {
             String formattedFingering = String.join(" ",
-                    cellData.getValue().getFingering().get(0).getFingers());
-            return new javafx.beans.property.SimpleStringProperty(formattedFingering);
+                    cellData.getValue().getFingering().getFirst().getFingers());
+            return new SimpleStringProperty(formattedFingering);
+        });
+        capoTableColumn.setCellValueFactory(cellData -> {
+            Fingering fingering = cellData.getValue().getFingering().getFirst();
+            String[] fingers = fingering.getFingers();
+            int capoMax  = getMinFret(fingers);
+            return new SimpleStringProperty(String.valueOf(capoMax));
         });
         actionButton.setOnAction(event -> {
             if (mode.equals("search")) {
@@ -85,6 +95,21 @@ public class ChordManagerController {
         fingeringLabel.setVisible(false);
         fingeringTextField.setVisible(false);
         firstRunShowChords();
+    }
+
+    public int getMinFret(String[] fingers) {
+        int min = Integer.MAX_VALUE;
+        for (String finger : fingers) {
+            try {
+                int fret = Integer.parseInt(finger);
+                if (fret < min) {
+                    min = fret;
+                }
+            } catch (NumberFormatException ignored) {
+                //így ignoráljuk
+            }
+        }
+        return min;
     }
 
     private void firstRunShowChords() {
@@ -120,8 +145,7 @@ public class ChordManagerController {
         filteredChords = new ArrayList<>();
 
         for (GuitarChord chord : allChords) {
-            boolean match =
-                            (root.isEmpty() || chord.getRoot().equalsIgnoreCase(root)) &&
+            boolean match = (root.isEmpty() || chord.getRoot().equalsIgnoreCase(root)) &&
                             (type.isEmpty() || chord.getType().equalsIgnoreCase(type)) &&
                             (modifier.isEmpty() || chord.getModifier().equalsIgnoreCase(modifier)) &&
                             (bass.isEmpty() || chord.getBass().equalsIgnoreCase(bass));
@@ -182,15 +206,14 @@ public class ChordManagerController {
             InputStream chordsStream = new FileInputStream(filePath);
             List<GuitarChord> chords = objectMapper.readValue(chordsStream, new TypeReference<List<GuitarChord>>() {});
 
-            boolean found = false;
+            boolean foundSameChord = false;
             for (GuitarChord chord : chords) {
                 if (Objects.equals(chord.getRoot(), newChord.getRoot()) &&
                 Objects.equals(chord.getType(), newChord.getType()) &&
                 Objects.equals(chord.getModifier(), newChord.getModifier()) &&
                 Objects.equals(chord.getBass(), newChord.getBass())) {
-                    found = true;
-
-                    boolean fingeringExists = chord.getFingering().stream().anyMatch(f -> f.equals(newChord.getFingering().get(0)));
+                    foundSameChord = true;
+                    boolean fingeringExists = chord.getFingering().stream().anyMatch(f -> f.equals(newChord.getFingering().getFirst()));
                     if (!fingeringExists) {
                         chord.getFingering().addAll(newChord.getFingering());
                     } else {
@@ -200,7 +223,7 @@ public class ChordManagerController {
                     break;
                 }
             }
-            if (!found) {
+            if (!foundSameChord) {
                 chords.add(newChord);
             }
             try (var writer = new java.io.FileWriter(filePath)) {
@@ -241,7 +264,7 @@ public class ChordManagerController {
     }
 
     public String firstLetterUpperCase(String string) {
-        if (string.equals("")) {
+        if (string.isEmpty()) {
             return string;
         } else if (string.length() == 1) {
             return string.toUpperCase();

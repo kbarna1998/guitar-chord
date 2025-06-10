@@ -112,4 +112,28 @@
   "fingering" : [ {
     "fingers" : [ "4", "6", "6", "5", "4", "4" ]
   } ]
+}, {
+  "root" : "D",
+  "type" : "",
+  "modifier" : "",
+  "bass" : "F#",
+  "fingering" : [ {
+    "fingers" : [ "2", "0", "0", "2", "3", "2" ]
+  } ]
+}, {
+  "root" : "F",
+  "type" : "",
+  "modifier" : "maj9",
+  "bass" : "G",
+  "fingering" : [ {
+    "fingers" : [ "3", "3", "3", "5", "5", "5" ]
+  } ]
+}, {
+  "root" : "D",
+  "type" : "",
+  "modifier" : "sus2",
+  "bass" : "",
+  "fingering" : [ {
+    "fingers" : [ "X", "X", "0", "2", "3", "0" ]
+  } ]
 } ]
