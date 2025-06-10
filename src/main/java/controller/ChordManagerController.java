@@ -1,8 +1,20 @@
 package controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import lombok.Getter;
+import model.Fingering;
+import model.GuitarChord;
+
+import java.io.FileInputStream;
+import java.util.*;
 
 import java.io.InputStream;
 
@@ -18,45 +30,205 @@ public class ChordManagerController {
     @FXML
     private TextField typeTextField;
     @FXML
-    private TextField bassTextField;
+    public TextField modifierTextField;
     @FXML
-    private TextField fingeringTextField;
+    private TextField bassTextField;
     @FXML
     private Label fingeringLabel;
     @FXML
+    private TextField fingeringTextField;
+    @FXML
     private Button actionButton;
     @FXML
-    private TableView<?> chordlistTableView;
+    private TableView<GuitarChord> chordlistTableView;
     @FXML
-    private TableColumn<?,?> idTableColumn;
+    private TableColumn<GuitarChord, String> idTableColumn;
     @FXML
-    private TableColumn<?,?> chordTableColumn;
+    private TableColumn<GuitarChord, String> chordTableColumn;
     @FXML
-    private TableColumn<?,?> fingeringTableColumn;
+    private TableColumn<GuitarChord, String> fingeringTableColumn;
 
+    @Getter
     private String mode = "search";
-    public String getMode() {
-        return mode;
-    }
+    private List<GuitarChord> allChords = new ArrayList<>();
+    private List<GuitarChord> filteredChords = new ArrayList<>();
+    private final String filePath = "D:/DE_IK_PTI/4. félév/Szoftverfejlesztés/guitar-chord/chords.json";
 
     @FXML
     private void initialize() {
-        searchButton.setOnAction(e -> switchToSearchMode());
-        createButton.setOnAction(e -> switchToCreateMode());
-        exitButton.setOnAction(e -> Platform.exit());
-    }
-
-    private void switchToCreateMode() {
-        mode = "create";
+        idTableColumn.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleStringProperty(String.valueOf(chordlistTableView.getItems().indexOf(cellData.getValue()) + 1)));
+        chordTableColumn.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleStringProperty(
+                            cellData.getValue().getRoot() +
+                                cellData.getValue().getType() +
+                                (cellData.getValue().getModifier() != null ? cellData.getValue().getModifier() : "") +
+                                (cellData.getValue().getBass() != null && !cellData.getValue().getBass().isEmpty() ? "/" + cellData.getValue().getBass() : "")
+                ));
+        fingeringTableColumn.setCellValueFactory(cellData -> {
+            String formattedFingering = String.join(" ",
+                    cellData.getValue().getFingering().get(0).getFingers());
+            return new javafx.beans.property.SimpleStringProperty(formattedFingering);
+        });
+        actionButton.setOnAction(event -> {
+            if (mode.equals("search")) {
+                loadChordsFromJson();
+                searchChords();
+                showSearchResult();
+            } else if (mode.equals("create")) {
+                createChords();
+                loadChordsFromJson();
+                searchChords();
+                showSearchResult();
+            }
+        });
+        Platform.runLater(() -> rootTextField.requestFocus());
         fingeringLabel.setVisible(false);
         fingeringTextField.setVisible(false);
-        actionButton.setText("Mentés");
+        firstRunShowChords();
     }
 
-    private void switchToSearchMode() {
+    private void firstRunShowChords() {
+        loadChordsFromJson();
+        searchChords();
+        showSearchResult();
+    }
+
+    private void loadChordsFromJson() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream chordsStream = new FileInputStream(filePath);
+            allChords = mapper.readValue(chordsStream, new TypeReference<List<GuitarChord>>() {});
+        } catch (Exception e) {
+            showAlert("Hiba", "Nem sikerült beolvasni a JSON fájlt");
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void searchChords() {
+        String root = rootTextField.getText().trim();
+        String type = typeTextField.getText().trim();
+        String modifier = modifierTextField.getText().trim();
+        String bass = bassTextField.getText().trim();
+
+        filteredChords = new ArrayList<>();
+
+        for (GuitarChord chord : allChords) {
+            boolean match =
+                            (root.isEmpty() || chord.getRoot().equalsIgnoreCase(root)) &&
+                            (type.isEmpty() || chord.getType().equalsIgnoreCase(type)) &&
+                            (modifier.isEmpty() || chord.getModifier().equalsIgnoreCase(modifier)) &&
+                            (bass.isEmpty() || chord.getBass().equalsIgnoreCase(bass));
+
+            if (match) {
+                for (Fingering fingering : chord.getFingering()) {
+                    GuitarChord chordCopy = new GuitarChord(
+                            chord.getRoot(),
+                            chord.getType(),
+                            chord.getModifier(),
+                            chord.getBass(),
+                            List.of(fingering)
+                    );
+                    filteredChords.add(chordCopy);
+                }
+            }
+        }
+    }
+
+    private void showSearchResult() {
+        ObservableList<GuitarChord> items = FXCollections.observableArrayList(filteredChords);
+        chordlistTableView.setItems(items);
+    }
+
+    private void createChords() {
+        String root = rootTextField.getText().trim().toUpperCase();
+        String type = typeTextField.getText().trim();
+        String modifier = modifierTextField.getText().trim();
+        String bass = bassTextField.getText().trim().toUpperCase();
+        String fingeringInput = fingeringTextField.getText().trim().toUpperCase();
+
+        String[] fingers = fingeringInput.split("\\s+");
+        if (fingers.length != 6) {
+            showAlert("Beviteli hiba", "A 6 húr helyett " + fingers.length + " húrt adtál meg.");
+            return;
+        }
+
+        Fingering fingering = new Fingering();
+        fingering.setFingers(fingeringInput.split("\\s+"));
+
+        GuitarChord newChord = new GuitarChord(
+                root,
+                type.isEmpty() ? "" : type,
+                modifier.isEmpty() ? "" : modifier,
+                bass.isEmpty() ? "" : bass,
+                List.of(fingering));
+        writeChords(newChord);
+    }
+
+    private void writeChords(GuitarChord newChord) {
+        try {
+            var objectMapper = new ObjectMapper();
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            InputStream chordsStream = new FileInputStream(filePath);
+            List<GuitarChord> chords = objectMapper.readValue(chordsStream, new TypeReference<List<GuitarChord>>() {});
+
+            boolean found = false;
+            for (GuitarChord chord : chords) {
+                if (Objects.equals(chord.getRoot(), newChord.getRoot()) &&
+                Objects.equals(chord.getType(), newChord.getType()) &&
+                Objects.equals(chord.getModifier(), newChord.getModifier()) &&
+                Objects.equals(chord.getBass(), newChord.getBass())) {
+                    found = true;
+
+                    boolean fingeringExists = chord.getFingering().stream().anyMatch(f -> f.equals(newChord.getFingering().get(0)));
+                    if (!fingeringExists) {
+                        chord.getFingering().addAll(newChord.getFingering());
+                    } else {
+                        showAlert("Már létezik", "Az akkord már létezik a megadott lefogással.");
+                        return;
+                    }
+                    break;
+                }
+            }
+            if (!found) {
+                chords.add(newChord);
+            }
+            try (var writer = new java.io.FileWriter(filePath)) {
+                objectMapper.writeValue(writer, chords);
+            }
+            allChords = chords;
+        } catch (Exception e) {
+            showAlert("Hiba", "Nem sikerült menteni a JSON fájlt:\n" + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void switchToSearchMode(ActionEvent event) {
         mode = "search";
+        fingeringLabel.setVisible(false);
+        fingeringTextField.setVisible(false);
+        actionButton.setText("Keresés");
+        Platform.runLater(() -> rootTextField.requestFocus());
+    }
+
+    @FXML
+    private void switchToCreateMode(ActionEvent event) {
+        mode = "create";
         fingeringLabel.setVisible(true);
         fingeringTextField.setVisible(true);
-        actionButton.setText("Keresés");
+        actionButton.setText("Mentés");
+        Platform.runLater(() -> rootTextField.requestFocus());
+    }
+
+    @FXML
+    private void exit(ActionEvent event) {
+        Platform.exit();
     }
 }
