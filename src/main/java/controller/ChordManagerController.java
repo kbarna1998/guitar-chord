@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import model.Fingering;
 import model.GuitarChord;
+import repository.ChordRepository;
 
 import java.io.FileInputStream;
 import java.util.*;
@@ -56,6 +57,7 @@ public class ChordManagerController {
     private List<GuitarChord> allChords = new ArrayList<>();
     private List<GuitarChord> filteredChords = new ArrayList<>();
     private final String filePath = "D:/DE_IK_PTI/4. félév/Szoftverfejlesztés/guitar-chord/chords.json";
+    private final ChordRepository chordRepository = new ChordRepository(filePath);
 
     @FXML
     private void initialize() {
@@ -120,9 +122,7 @@ public class ChordManagerController {
 
     private void loadChordsFromJson() {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream chordsStream = new FileInputStream(filePath);
-            allChords = mapper.readValue(chordsStream, new TypeReference<List<GuitarChord>>() {});
+            allChords = chordRepository.loadChords();
         } catch (Exception e) {
             showAlert("Hiba", "Nem sikerült beolvasni a JSON fájlt");
         }
@@ -201,35 +201,10 @@ public class ChordManagerController {
 
     private void writeChords(GuitarChord newChord) {
         try {
-            var objectMapper = new ObjectMapper();
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            InputStream chordsStream = new FileInputStream(filePath);
-            List<GuitarChord> chords = objectMapper.readValue(chordsStream, new TypeReference<List<GuitarChord>>() {});
-
-            boolean foundSameChord = false;
-            for (GuitarChord chord : chords) {
-                if (Objects.equals(chord.getRoot(), newChord.getRoot()) &&
-                Objects.equals(chord.getType(), newChord.getType()) &&
-                Objects.equals(chord.getModifier(), newChord.getModifier()) &&
-                Objects.equals(chord.getBass(), newChord.getBass())) {
-                    foundSameChord = true;
-                    boolean fingeringExists = chord.getFingering().stream().anyMatch(f -> f.equals(newChord.getFingering().getFirst()));
-                    if (!fingeringExists) {
-                        chord.getFingering().addAll(newChord.getFingering());
-                    } else {
-                        showAlert("Már létezik", "Az akkord már létezik a megadott lefogással.");
-                        return;
-                    }
-                    break;
-                }
-            }
-            if (!foundSameChord) {
-                chords.add(newChord);
-            }
-            try (var writer = new java.io.FileWriter(filePath)) {
-                objectMapper.writeValue(writer, chords);
-            }
-            allChords = chords;
+            List<GuitarChord> updatedChords = chordRepository.updateChord(newChord);
+            allChords = updatedChords;
+        } catch (IllegalStateException e) {
+            showAlert("Már létezik", e.getMessage());
         } catch (Exception e) {
             showAlert("Hiba", "Nem sikerült menteni a JSON fájlt:\n" + e.getMessage());
         }
