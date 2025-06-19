@@ -1,5 +1,6 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,4 +16,9 @@ public class GuitarChord {
     private String modifier;
     private String bass;
     private List<Fingering> fingering;
+
+    @JsonIgnore
+    public String getDisplayName () {
+        return root + type + (modifier != null ? modifier : "") + (bass != null && !bass.isEmpty() ? "/" + bass : "");
+    }
 }

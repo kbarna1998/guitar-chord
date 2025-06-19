@@ -1,0 +1,26 @@
+[
+  {
+    "root": "C",
+    "type": "",
+    "modifier": "",
+    "bass": "",
+    "fingering": [
+      {
+        "fingers": [
+          "X","3","2","0","1","0"
+        ]
+      }
+    ],
+    "root": "D",
+    "type": "m",
+    "modifier": "7",
+    "bass": "A",
+    "fingering": [
+      {
+        "fingers": [
+          "X","0","0","2","3","1"
+        ]
+      }
+    ]
+  }
+]

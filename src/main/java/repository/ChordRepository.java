@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import model.GuitarChord;
+import service.Dialog;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,7 +24,10 @@ public class ChordRepository {
     public List<GuitarChord> loadChords() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         try (InputStream chordStream = new FileInputStream(filePath)) {
-            return mapper.readValue(chordStream, new TypeReference<List<GuitarChord>>() {});
+            return mapper.readValue(chordStream, new TypeReference<>() {});
+        } catch (IOException e) {
+            e.printStackTrace();
+            return List.of();
         }
     }
 
@@ -36,32 +41,20 @@ public class ChordRepository {
             chords = objectMapper.readValue(chordsStream, new TypeReference<>() {});
         }
 
-        boolean foundSameChord = false;
-        for (GuitarChord chord : chords) {
-            if (Objects.equals(chord.getRoot(), newChord.getRoot()) &&
-                    Objects.equals(chord.getType(), newChord.getType()) &&
-                    Objects.equals(chord.getModifier(), newChord.getModifier()) &&
-                    Objects.equals(chord.getBass(), newChord.getBass())) {
-
-                foundSameChord = true;
-                boolean fingeringExists = chord.getFingering().stream()
-                        .anyMatch(f -> f.equals(newChord.getFingering().getFirst()));
-
-                if (!fingeringExists) {
-                    chord.getFingering().addAll(newChord.getFingering());
-                } else {
-                    throw new IllegalStateException("Az akkord már létezik a megadott lefogással.");
-                }
-                break;
-            }
+        boolean duplicate = chords.stream().anyMatch(existing ->
+                        Objects.equals(existing.getRoot(), newChord.getRoot()) &&
+                        Objects.equals(existing.getType(), newChord.getType()) &&
+                        Objects.equals(existing.getModifier(), newChord.getModifier()) &&
+                        Objects.equals(existing.getBass(), newChord.getBass()) &&
+                        Objects.equals(existing.getFingering(), newChord.getFingering())
+        );
+        if (duplicate) {
+            Dialog.showAlert("Hiba", "Az akkord már létezik ezzel a lefogással.");
+            throw new IllegalStateException();
         }
 
-        if (!foundSameChord) {
-            chords.add(newChord);
-        }
-
+        chords.add(newChord);
         objectMapper.writeValue(new File(filePath), chords);
-
         return chords;
     }
 }

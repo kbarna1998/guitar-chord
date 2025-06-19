@@ -1,25 +1,19 @@
 package controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import lombok.Getter;
-import lombok.NonNull;
 import model.Fingering;
 import model.GuitarChord;
 import repository.ChordRepository;
+import service.ChordService;
 
-import java.io.FileInputStream;
 import java.util.*;
 
-import java.io.InputStream;
+import static service.Dialog.*;
 
 public class ChordManagerController {
     @FXML
@@ -59,18 +53,30 @@ public class ChordManagerController {
 
     private final String filePath = "chords.json";
     private final ChordRepository chordRepository = new ChordRepository(filePath);
+    private final ChordService chordService = new ChordService(chordRepository);
 
     @FXML
-    private void initialize() {
+    private void initialize() throws Exception {
+        initializeTableColumns();
+        actionButton.setOnAction(event -> {
+            try {
+                onActionButton();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Platform.runLater(() -> rootTextField.requestFocus());
+        fingeringLabel.setVisible(false);
+        fingeringTextField.setVisible(false);
+        searchButton.setStyle("-fx-background-color: lightblue;");
+        loadAndShowChords();
+    }
+
+    private void initializeTableColumns() {
         indexTableColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.valueOf(chordlistTableView.getItems().indexOf(cellData.getValue()) + 1)));
         chordTableColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(
-                            cellData.getValue().getRoot() +
-                                cellData.getValue().getType() +
-                                (cellData.getValue().getModifier() != null ? cellData.getValue().getModifier() : "") +
-                                (cellData.getValue().getBass() != null && !cellData.getValue().getBass().isEmpty() ? "/" + cellData.getValue().getBass() : "")
-                ));
+                new SimpleStringProperty(cellData.getValue().getDisplayName()));
         fingeringTableColumn.setCellValueFactory(cellData -> {
             String formattedFingering = String.join(" ",
                     cellData.getValue().getFingering().getFirst().getFingers());
@@ -79,25 +85,44 @@ public class ChordManagerController {
         capoTableColumn.setCellValueFactory(cellData -> {
             Fingering fingering = cellData.getValue().getFingering().getFirst();
             String[] fingers = fingering.getFingers();
-            int capoMax  = getMinFret(fingers);
+            int capoMax = ChordService.getMinFret(fingers);
             return new SimpleStringProperty(String.valueOf(capoMax));
         });
-        actionButton.setOnAction(event -> {
-            if (mode.equals("search")) {
-                loadChordsFromJson();
-                searchChords();
-                showSearchResult();
-            } else if (mode.equals("create")) {
-                createChords();
-                loadChordsFromJson();
-                searchChords();
-                showSearchResult();
-            }
-        });
-        Platform.runLater(() -> rootTextField.requestFocus());
-        fingeringLabel.setVisible(false);
-        fingeringTextField.setVisible(false);
-        firstRunShowChords();
+    }
+
+    private void onActionButton() throws Exception {
+        if (mode.equals("search")) {
+            searchChords();
+            updateTableView();
+        } else if (mode.equals("create")) {
+            createChord();
+            searchChords();
+            updateTableView();
+        }
+    }
+
+    private void searchChords() throws Exception {
+        filteredChords = chordService.searchChord(rootTextField.getText(), typeTextField.getText(), modifierTextField.getText(), bassTextField.getText());
+    }
+
+    private void createChord() throws Exception {
+        GuitarChord newChord = chordService.createChord(rootTextField.getText(), typeTextField.getText(), modifierTextField.getText(), bassTextField.getText(), fingeringTextField.getText());
+        allChords = chordService.saveChord(newChord);
+        filteredChords = new ArrayList<>(allChords);
+    }
+
+    private void updateTableView() {
+        chordlistTableView.setItems(FXCollections.observableArrayList(filteredChords));
+    }
+
+    private void loadAndShowChords() {
+        try {
+            allChords = chordService.loadAllChords();
+            filteredChords = new ArrayList<>(allChords);
+            updateTableView();
+        } catch (Exception e) {
+            showAlert("Hiba", "Nem sikerült beolvasni a JSON fájlt");
+        }
     }
 
     @FXML
@@ -111,6 +136,8 @@ public class ChordManagerController {
         bassTextField.setText("");
         actionButton.setText("Keresés");
         Platform.runLater(() -> rootTextField.requestFocus());
+        searchButton.setStyle("-fx-background-color: lightblue;");
+        createButton.setStyle("");
     }
 
     @FXML
@@ -121,131 +148,12 @@ public class ChordManagerController {
         fingeringTextField.setText("");
         actionButton.setText("Mentés");
         Platform.runLater(() -> rootTextField.requestFocus());
-    }
-
-    public int getMinFret(String[] fingers) {
-        int min = Integer.MAX_VALUE;
-        for (String finger : fingers) {
-            try {
-                int fret = Integer.parseInt(finger);
-                if (fret < min) {
-                    min = fret;
-                }
-            } catch (NumberFormatException ignored) {
-                //így ignoráljuk
-            }
-        }
-        return min;
-    }
-
-    private void firstRunShowChords() {
-        loadChordsFromJson();
-        searchChords();
-        showSearchResult();
-    }
-
-    private void loadChordsFromJson() {
-        try {
-            allChords = chordRepository.loadChords();
-        } catch (Exception e) {
-            showAlert("Hiba", "Nem sikerült beolvasni a JSON fájlt");
-        }
-    }
-
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void searchChords() {
-        String root = rootTextField.getText().trim();
-        String type = typeTextField.getText().trim();
-        String modifier = modifierTextField.getText().trim();
-        String bass = bassTextField.getText().trim();
-
-        filteredChords = new ArrayList<>();
-
-        for (GuitarChord chord : allChords) {
-            boolean match = (root.isEmpty() || chord.getRoot().equalsIgnoreCase(root)) &&
-                            (type.isEmpty() || chord.getType().equalsIgnoreCase(type)) &&
-                            (modifier.isEmpty() || chord.getModifier().equalsIgnoreCase(modifier)) &&
-                            (bass.isEmpty() || chord.getBass().equalsIgnoreCase(bass));
-
-            if (match) {
-                for (Fingering fingering : chord.getFingering()) {
-                    GuitarChord chordCopy = new GuitarChord(
-                            chord.getRoot(),
-                            chord.getType(),
-                            chord.getModifier(),
-                            chord.getBass(),
-                            List.of(fingering)
-                    );
-                    filteredChords.add(chordCopy);
-                }
-            }
-        }
-    }
-
-    private void showSearchResult() {
-        ObservableList<GuitarChord> items = FXCollections.observableArrayList(filteredChords);
-        chordlistTableView.setItems(items);
-    }
-
-    private void createChords() {
-        String root = firstLetterUpperCase(rootTextField.getText().trim());;
-        String type = typeTextField.getText().trim().toLowerCase();
-        String modifier = modifierTextField.getText().trim().toLowerCase();
-        String bass = firstLetterUpperCase(bassTextField.getText().trim());
-        String fingeringInput = fingeringTextField.getText().trim().toUpperCase();
-
-        String[] fingers = fingeringInput.split("\\s+");
-        if (fingers.length != 6) {
-            showAlert("Beviteli hiba", "A 6 húr helyett " + fingers.length + " húrt adtál meg.");
-            return;
-        }
-
-        for (int i = 0; i < fingers.length; i++) {
-            fingers[i] = firstLetterUpperCase(fingers[i]);
-        }
-
-        Fingering fingering = new Fingering();
-        fingering.setFingers(fingeringInput.split("\\s+"));
-
-        GuitarChord newChord = new GuitarChord(
-                root,
-                type.isEmpty() ? "" : type,
-                modifier.isEmpty() ? "" : modifier,
-                bass.isEmpty() ? "" : bass,
-                List.of(fingering));
-        writeChords(newChord);
-    }
-
-    private void writeChords(GuitarChord newChord) {
-        try {
-            List<GuitarChord> updatedChords = chordRepository.updateChord(newChord);
-            allChords = updatedChords;
-        } catch (IllegalStateException e) {
-            showAlert("Már létezik", e.getMessage());
-        } catch (Exception e) {
-            showAlert("Hiba", "Nem sikerült menteni a JSON fájlt:\n" + e.getMessage());
-        }
+        searchButton.setStyle("");
+        createButton.setStyle("-fx-background-color: lightblue;");
     }
 
     @FXML
     private void exit(ActionEvent event) {
         Platform.exit();
-    }
-
-    public String firstLetterUpperCase(String string) {
-        if (string.isEmpty()) {
-            return string;
-        } else if (string.length() == 1) {
-            return string.toUpperCase();
-        } else {
-            return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
-        }
     }
 }
