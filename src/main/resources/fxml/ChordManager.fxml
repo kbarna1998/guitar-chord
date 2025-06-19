@@ -100,7 +100,7 @@
             <children>
                 <TableView fx:id="chordlistTableView" layoutX="20.0" layoutY="20.0" prefHeight="450.0" prefWidth="380.0">
                     <columns>
-                        <TableColumn fx:id="idTableColumn" maxWidth="30.0" minWidth="30.0" prefWidth="30.0" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="indexTableColumn" maxWidth="30.0" minWidth="30.0" prefWidth="30.0" style="-fx-alignment: CENTER;" />
                         <TableColumn fx:id="chordTableColumn" prefWidth="100.0" style="-fx-alignment: CENTER;" text="Akkord" />
                         <TableColumn fx:id="fingeringTableColumn" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" style="-fx-alignment: CENTER;" text="Lefogás" />
                         <TableColumn fx:id="capoTableColumn" maxWidth="80.0" minWidth="80.0" style="-fx-alignment: CENTER;" text="CapoMax" />

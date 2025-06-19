@@ -45,7 +45,7 @@ public class ChordManagerController {
     @FXML
     private TableView<GuitarChord> chordlistTableView;
     @FXML
-    private TableColumn<GuitarChord, String> idTableColumn;
+    private TableColumn<GuitarChord, String> indexTableColumn;
     @FXML
     private TableColumn<GuitarChord, String> chordTableColumn;
     @FXML
@@ -56,12 +56,13 @@ public class ChordManagerController {
     private String mode = "search";
     private List<GuitarChord> allChords = new ArrayList<>();
     private List<GuitarChord> filteredChords = new ArrayList<>();
-    private final String filePath = "D:/DE_IK_PTI/4. félév/Szoftverfejlesztés/guitar-chord/chords.json";
+
+    private final String filePath = "chords.json";
     private final ChordRepository chordRepository = new ChordRepository(filePath);
 
     @FXML
     private void initialize() {
-        idTableColumn.setCellValueFactory(cellData ->
+        indexTableColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.valueOf(chordlistTableView.getItems().indexOf(cellData.getValue()) + 1)));
         chordTableColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(
@@ -97,6 +98,29 @@ public class ChordManagerController {
         fingeringLabel.setVisible(false);
         fingeringTextField.setVisible(false);
         firstRunShowChords();
+    }
+
+    @FXML
+    private void switchToSearchMode(ActionEvent event) {
+        mode = "search";
+        fingeringLabel.setVisible(false);
+        fingeringTextField.setVisible(false);
+        rootTextField.setText("");
+        typeTextField.setText("");
+        modifierTextField.setText("");
+        bassTextField.setText("");
+        actionButton.setText("Keresés");
+        Platform.runLater(() -> rootTextField.requestFocus());
+    }
+
+    @FXML
+    private void switchToCreateMode(ActionEvent event) {
+        mode = "create";
+        fingeringLabel.setVisible(true);
+        fingeringTextField.setVisible(true);
+        fingeringTextField.setText("");
+        actionButton.setText("Mentés");
+        Platform.runLater(() -> rootTextField.requestFocus());
     }
 
     public int getMinFret(String[] fingers) {
@@ -208,29 +232,6 @@ public class ChordManagerController {
         } catch (Exception e) {
             showAlert("Hiba", "Nem sikerült menteni a JSON fájlt:\n" + e.getMessage());
         }
-    }
-
-    @FXML
-    private void switchToSearchMode(ActionEvent event) {
-        mode = "search";
-        fingeringLabel.setVisible(false);
-        fingeringTextField.setVisible(false);
-        rootTextField.setText("");
-        typeTextField.setText("");
-        modifierTextField.setText("");
-        bassTextField.setText("");
-        actionButton.setText("Keresés");
-        Platform.runLater(() -> rootTextField.requestFocus());
-    }
-
-    @FXML
-    private void switchToCreateMode(ActionEvent event) {
-        mode = "create";
-        fingeringLabel.setVisible(true);
-        fingeringTextField.setVisible(true);
-        fingeringTextField.setText("");
-        actionButton.setText("Mentés");
-        Platform.runLater(() -> rootTextField.requestFocus());
     }
 
     @FXML

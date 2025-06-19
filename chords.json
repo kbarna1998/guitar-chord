@@ -144,4 +144,28 @@
   "fingering" : [ {
     "fingers" : [ "X", "3", "2", "0", "0", "0" ]
   } ]
+}, {
+  "root" : "E",
+  "type" : "m",
+  "modifier" : "7",
+  "bass" : "",
+  "fingering" : [ {
+    "fingers" : [ "0", "2", "2", "0", "3", "0" ]
+  } ]
+}, {
+  "root" : "F#",
+  "type" : "m",
+  "modifier" : "7",
+  "bass" : "",
+  "fingering" : [ {
+    "fingers" : [ "2", "4", "2", "2", "2", "2" ]
+  } ]
+}, {
+  "root" : "F#",
+  "type" : "m",
+  "modifier" : "",
+  "bass" : "",
+  "fingering" : [ {
+    "fingers" : [ "2", "4", "4", "2", "2", "2" ]
+  } ]
 } ]
