@@ -2,7 +2,6 @@ package service;
 
 import model.Fingering;
 import model.GuitarChord;
-import model.InvalidInput;
 import repository.ChordRepository;
 
 import java.io.IOException;
@@ -53,15 +52,22 @@ public class ChordService {
     }
 
     public void validateNoteInput(String note, String noteType) throws InvalidInput {
+        if (note == null) {
+            throw new InvalidInput("The note is null");
+        }
+        if (note.isEmpty()) {
+            DialogHandler.showAlert("Beviteli hiba", "A megadott " + noteType + " üres!");
+            throw new InvalidInput("The note is empty");
+        }
         if (Arrays.stream(validNotes).noneMatch(valid -> valid.equalsIgnoreCase(note))) {
-            Dialog.showAlert("Beviteli hiba", "A megadott " + noteType + " nem érvényes!");
+            DialogHandler.showAlert("Beviteli hiba", "A megadott " + noteType + " nem érvényes!");
             throw new InvalidInput("Wrong root or bass detected");
         }
     }
 
     public void isNoteExist(String note, String noteType) throws InvalidInput {
         if (note == null || note.isEmpty()) {
-            Dialog.showAlert("Beviteli hiba", "A(z) " + noteType + " megadása kötelező!");
+            DialogHandler.showAlert("Beviteli hiba", "A(z) " + noteType + " megadása kötelező!");
             throw new InvalidInput("Missing root field");
         }
     }
@@ -69,7 +75,7 @@ public class ChordService {
     public String[] fingeringValidate(String fingeringInput) throws InvalidInput {
         String[] fingers = fingeringInput.trim().toUpperCase().split("\\s+");
         if (fingers.length != 6) {
-            Dialog.showAlert("Beviteli hiba", "A 6 húr helyett " + fingers.length + " húrt adtál meg.");
+            DialogHandler.showAlert("Beviteli hiba", "A 6 húr helyett " + fingers.length + " húrt adtál meg.");
             throw new InvalidInput("Wrong number of fingers");
         }
         for (int i = 0; i < fingers.length; i++) {
@@ -79,11 +85,11 @@ public class ChordService {
             }
             try {
                 if (Integer.parseInt(fingers[i]) < 1) {
-                    Dialog.showAlert("Beviteli hiba", "A húrok lehogásánál nem szerepelhet negatív szám!");
+                    DialogHandler.showAlert("Beviteli hiba", "A húrok lehogásánál nem szerepelhet negatív szám!");
                     throw new InvalidInput("Invalid finger input, the number cannot be negative");
                 }
             } catch (NumberFormatException e) {
-                Dialog.showAlert("Beviteli hiba", "A húrok lehogásánál nem szerepelhet X-től különböző betű!\nHa nyitott húrt szeretnél megadni, akkor azt a 0 (nulla) számmal tudod megtenni.");
+                DialogHandler.showAlert("Beviteli hiba", "A húrok lehogásánál nem szerepelhet X-től különböző betű!\nHa nyitott húrt szeretnél megadni, akkor azt a 0 (nulla) számmal tudod megtenni.");
                 throw new InvalidInput("Invalid finger input, the number cannot be negative");
             }
         }

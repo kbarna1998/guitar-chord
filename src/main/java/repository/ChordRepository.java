@@ -4,13 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import model.GuitarChord;
-import service.Dialog;
+import service.DialogHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,7 +48,7 @@ public class ChordRepository {
                         Objects.equals(existing.getFingering(), newChord.getFingering())
         );
         if (duplicate) {
-            Dialog.showAlert("Hiba", "Az akkord már létezik ezzel a lefogással.");
+            DialogHandler.showAlert("Hiba", "Az akkord már létezik ezzel a lefogással.");
             throw new IllegalStateException();
         }
 

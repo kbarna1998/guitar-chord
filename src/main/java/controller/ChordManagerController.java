@@ -13,7 +13,7 @@ import service.ChordService;
 
 import java.util.*;
 
-import static service.Dialog.*;
+import static service.DialogHandler.*;
 
 public class ChordManagerController {
     @FXML
